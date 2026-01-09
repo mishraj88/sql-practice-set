@@ -1,0 +1,137 @@
+Some interview  points
+
+What is Window Frame: ROWS BETWEEN (Very Important Concept)
+What is a Window Frame?
+
+A window frame defines which rows inside a partition are used for the window calculation.
+
+Syntax:
+
+FUNCTION() OVER (
+    PARTITION BY ...
+    ORDER BY ...
+    ROWS BETWEEN <start> AND <end>
+)
+
+Common Frame Types
+🔹 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+
+Meaning:
+From the first row of the partition up to the current row.
+
+Example: Running total of salary per department
+SELECT
+    name,
+    department,
+    salary,
+    SUM(salary) OVER (
+        PARTITION BY department
+        ORDER BY salary
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS running_total
+FROM employee;
+
+
+Use Case:
+
+Running totals
+
+Cumulative sums
+
+Time-series analysis
+
+🔹 ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING
+
+Meaning:
+Current row + immediate previous + immediate next row.
+
+AVG(salary) OVER (
+    PARTITION BY department
+    ORDER BY salary
+    ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING
+)
+
+
+Use Case:
+
+Moving averages
+
+Trend smoothing
+
+🔹 Default Frame (Important Interview Trap)
+
+If you write:
+
+SUM(salary) OVER (PARTITION BY department ORDER BY salary)
+
+
+PostgreSQL implicitly uses:
+
+ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+
+
+Interview Insight:
+This default applies only when ORDER BY is present.
+
+ROWS vs RANGE (Advanced)
+Feature	ROWS	RANGE
+Operates on	Physical rows	Logical values
+Performance	Faster	Slower
+Predictability	High	Lower with duplicates
+
+Rule of thumb:
+Use ROWS unless you explicitly need value-based grouping.
+
+3. When Should We Use ROW_NUMBER()?
+Purpose of ROW_NUMBER()
+
+Assigns a unique sequential number to each row within a partition.
+
+Use ROW_NUMBER() When:
+✅ You want exact N rows per group
+ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary DESC)
+
+✅ You need deduplication
+DELETE FROM table
+WHERE id NOT IN (
+    SELECT MIN(id)
+    FROM table
+    GROUP BY key
+);
+
+
+(implemented via ROW_NUMBER() in modern SQL)
+
+✅ Pagination
+ROW_NUMBER() OVER (ORDER BY name)
+
+Do NOT Use ROW_NUMBER() When:
+
+❌ Salary ties must be preserved
+❌ Business logic depends on ranking fairness
+→ Use RANK() or DENSE_RANK() instead
+
+Interview Comparison Summary
+Requirement	Function
+Unique ordering	ROW_NUMBER
+Ranking with gaps	RANK
+Ranking without gaps	DENSE_RANK
+Cumulative calculations	SUM + ROWS
+Previous / next row comparison	LAG / LEAD
+Final Interview Verdict
+
+✔ Your implementations are correct
+✔ Your function choices are appropriate
+✔ Your understanding is at senior backend interview level
+
+If you want next:
+
+PostgreSQL trick questions
+
+SQL window function edge cases
+
+Translating these queries into real business scenarios
+
+Comparing window vs subquery performance
+
+Tell me how you want to proceed.
